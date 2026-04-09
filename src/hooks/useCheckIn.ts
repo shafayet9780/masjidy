@@ -1,0 +1,3 @@
+export function useCheckIn() {
+  return {};
+}

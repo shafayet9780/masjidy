@@ -1,0 +1,1 @@
+-- Masjidy: RLS policies — implement per PROJECT_SPEC §5.3

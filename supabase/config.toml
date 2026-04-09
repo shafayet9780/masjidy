@@ -1,0 +1,4 @@
+# Local Supabase config — run `supabase init` to replace with generated file
+
+[api]
+enabled = true

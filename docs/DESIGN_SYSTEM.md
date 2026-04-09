@@ -20,14 +20,14 @@
 
 | Layer | Tool | Version | Why |
 |---|---|---|---|
-| Component Library | `@gluestack-ui/themed` | Latest | Tailwind-based, Expo-compatible, accessible by default, tree-shakable |
-| Styling Engine | `nativewind` | v4+ | Tailwind CSS for React Native; utility-first, theme-aware |
-| Tailwind Config | `tailwindcss` | v3.4+ | Powers NativeWind; custom theme tokens defined here |
+| Component Library | **Gluestack UI v3** (`gluestack-ui` CLI) | Latest stable | Copy-paste primitives in-repo; NativeWind-styled; accessible baseline |
+| Styling Engine | `nativewind` | v4.2+ | Tailwind CSS for React Native; utility-first, theme-aware |
+| Tailwind Config | `tailwindcss` | v3.4.17+ | Powers NativeWind v4; custom theme tokens (CSS variables) |
 | Icon Library | `phosphor-react-native` | Latest | 9,000+ icons, 6 weights (Thin→Fill), MIT license, consistent 24px grid |
 | Font — Latin | `Inter` | Variable | Clean, highly legible, excellent for UI. Load via `expo-font` |
 | Font — Arabic/Urdu | `Noto Sans Arabic` | Variable | Google font, covers Arabic/Urdu/Bengali scripts. Excellent RTL metrics |
 | Font — Monospace | `JetBrains Mono` | Regular | Prayer time digits, countdowns — tabular figures for alignment |
-| Animations | `react-native-reanimated` | v3+ | Layout animations, shared transitions, gesture-driven motion |
+| Animations | `react-native-reanimated` | v4+ | Layout animations, shared transitions, gesture-driven motion (Expo SDK 55) |
 | Haptics | `expo-haptics` | Latest | Subtle feedback on check-in, follow, submission success |
 
 ---
@@ -491,10 +491,13 @@ interface ThemeContextValue {
 
 ### 13.2 NativeWind Tailwind Config
 
+Include both `app/` and `src/` in `content` when using Expo Router.
+
 ```javascript
 // tailwind.config.js
 module.exports = {
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./app/**/*.{js,ts,jsx,tsx}', './src/**/*.{js,ts,jsx,tsx}'],
+  presets: [require('nativewind/preset')],
   theme: {
     extend: {
       colors: {
@@ -524,27 +527,13 @@ module.exports = {
 };
 ```
 
-### 13.3 Gluestack UI Config Override
+### 13.3 Gluestack UI v3 (CLI)
 
-```typescript
-// src/theme/gluestack.config.ts
-import { createConfig } from '@gluestack-ui/themed';
+Use **`npx gluestack-ui init`** once per project, then **`npx gluestack-ui add <component>`** for Button, Input, Modal, etc. Generated components live under the path the CLI configures (commonly `components/ui/` or `src/components/ui/`).
 
-export const config = createConfig({
-  tokens: {
-    // Map Gluestack tokens to our CSS variable system
-    // This ensures Gluestack components respect theme switching
-  },
-  components: {
-    Button: {
-      theme: {
-        // Override default button styles with our radius, font, colors
-      }
-    }
-    // ... per-component overrides
-  }
-});
-```
+- **Styling**: Prefer NativeWind `className` and the same CSS variables as the rest of the app (`bg-primary`, `text-text-primary`, etc.).
+- **Theme alignment**: `src/theme/gluestack.config.ts` (or the file the CLI generates) should bridge Gluestack token names to Masjidy tokens where the CLI expects a config file — follow the official Gluestack v3 + NativeWind Expo guide for the current API.
+- **Legacy v1**: Do not use `@gluestack-ui/themed` + `createConfig` from v1; that stack is superseded by v3 for new work.
 
 ---
 

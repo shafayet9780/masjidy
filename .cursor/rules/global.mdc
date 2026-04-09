@@ -10,8 +10,8 @@ alwaysApply: true
 Masjidy is a React Native (Expo) + Supabase app for mosque discovery and jamat time tracking. Solo developer building with AI agent harness. Every decision optimizes for: shippability, offline-first, and sectarian neutrality.
 
 ## Architecture (Non-Negotiable)
-- **Frontend**: React Native + Expo SDK 52, Expo Router (file-based routing), TypeScript strict mode
-- **Styling**: NativeWind v4 (Tailwind CSS) + Gluestack UI. All colors via CSS variables from theme system. NEVER hardcode hex colors in components.
+- **Frontend**: React Native + Expo SDK 55, Expo Router (file-based routing), TypeScript strict mode. **New Architecture is mandatory** (SDK 55+; no legacy architecture).
+- **Styling**: NativeWind v4 (Tailwind CSS) + **Gluestack UI v3** (copy-paste / CLI model — components live in the repo, styled with NativeWind). All colors via CSS variables from theme system. NEVER hardcode hex colors in components.
 - **Icons**: Phosphor React Native. NEVER use emoji or unicode symbols as icons in UI.
 - **Backend**: Supabase (PostgreSQL + PostGIS + Auth + Realtime + Edge Functions)
 - **Cache**: Upstash Redis (server), Expo SQLite (client offline)

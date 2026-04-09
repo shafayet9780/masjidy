@@ -39,10 +39,11 @@ alwaysApply: false
 - Screen loads: show skeleton → fetch → render data OR show error.
 - Pull-to-refresh on any list screen.
 
-## Gluestack UI Usage
-- Use Gluestack primitives for: Button, Input, Select, Switch, Toast, Modal, Actionsheet, Badge, Avatar, Spinner, Divider.
-- Extend with custom components for Masjidy-specific UI (MosqueCard, TrustBadge, PrayerTimeRow, etc).
-- Override Gluestack styles through theme config, not per-instance style props.
+## Gluestack UI v3 Usage (CLI / copy-paste)
+- Add primitives with `npx gluestack-ui add <component>`; generated files live in the project (you own the code).
+- Style with **NativeWind `className`** and theme CSS variables — not legacy `@gluestack-style` prop styling.
+- Customize by editing the copied component files or wrapping them in `src/components/ui/`.
+- Extend with Masjidy-specific components (MosqueCard, TrustBadge, PrayerTimeRow, etc.) built on the same tokens.
 
 ## RTL
 - Never use `left`/`right` for layout — use `start`/`end` (NativeWind: `ps-4` not `pl-4`).

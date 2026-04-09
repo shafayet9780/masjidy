@@ -54,21 +54,23 @@
 
 ```json
 {
-  "expo": "~52.x",
-  "react": "18.x",
-  "react-native": "0.76.x",
+  "expo": "~55.x",
+  "react": "19.2.x",
+  "react-native": "0.83.x",
   "typescript": "~5.x"
 }
 ```
+
+> **Expo SDK 55**: React Native’s **New Architecture is mandatory** (no `newArchEnabled` toggle; legacy architecture is not supported).
 
 ### Navigation
 
 ```json
 {
-  "@react-navigation/native": "^6.x",
-  "@react-navigation/bottom-tabs": "^6.x",
-  "@react-navigation/native-stack": "^6.x",
-  "expo-router": "~4.x"
+  "@react-navigation/native": "^7.x",
+  "@react-navigation/bottom-tabs": "^7.x",
+  "@react-navigation/native-stack": "^7.x",
+  "expo-router": "~5.x"
 }
 ```
 
@@ -78,14 +80,16 @@
 
 ```json
 {
-  "@gluestack-ui/themed": "latest",
-  "nativewind": "^4.x",
-  "tailwindcss": "^3.4.x",
+  "gluestack-ui": "^3.x",
+  "nativewind": "^4.2.x",
+  "tailwindcss": "^3.4.17",
   "phosphor-react-native": "latest",
-  "react-native-reanimated": "~3.x",
+  "react-native-reanimated": "~4.x",
   "expo-haptics": "latest"
 }
 ```
+
+> **Gluestack UI v3**: CLI / copy-paste model (`npx gluestack-ui init`, `npx gluestack-ui add <name>`). Primitives live in the repo and use NativeWind. **NativeWind v4** pairs with **Tailwind CSS v3.4.x** (not Tailwind v4).
 
 ### Backend & Data
 
@@ -173,7 +177,7 @@ masjidy/
 │
 ├── src/
 │   ├── components/
-│   │   ├── ui/                   # Generic reusable (wrappers over Gluestack)
+│   │   ├── ui/                   # Generic reusable (Gluestack v3 primitives + Masjidy wrappers)
 │   │   │   ├── Button.tsx
 │   │   │   ├── Card.tsx
 │   │   │   ├── Badge.tsx
@@ -356,6 +360,8 @@ TWILIO_PHONE_NUMBER=
 
 ### app.json Key Config
 
+> **SDK 55**: Do not use root or Android `statusBar` in `app.json` — configure status bar with `expo-status-bar` in code. `newArchEnabled` is not set; New Architecture is always on.
+
 ```json
 {
   "expo": {
@@ -364,6 +370,7 @@ TWILIO_PHONE_NUMBER=
     "scheme": "masjidy",
     "version": "1.0.0",
     "orientation": "portrait",
+    "web": { "bundler": "metro" },
     "plugins": [
       "expo-router",
       "expo-localization",

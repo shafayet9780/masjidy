@@ -14,7 +14,7 @@
 | EAS CLI | Latest | `npm install -g eas-cli` |
 | Supabase CLI | Latest | `npm install -g supabase` |
 | Git | 2.40+ | System package manager |
-| Xcode | 15+ (Mac only) | App Store (for iOS simulator) |
+| Xcode | 26+ (Mac only) | App Store (required for iOS builds with Expo SDK 55) |
 | Android Studio | Latest | https://developer.android.com/studio |
 
 **Recommended**: Use Cursor as your IDE with the Masjidy project files in context.
@@ -23,11 +23,23 @@
 
 ## Step 1 — Clone & Install
 
+New app from template (SDK 55 — **use explicit template**; default `create-expo-app` may still target SDK 54 during transitions):
+
+```bash
+npx create-expo-app@latest masjidy --template default@sdk-55
+cd masjidy
+npm install
+```
+
+Existing clone:
+
 ```bash
 git clone <repo-url> masjidy
 cd masjidy
 npm install
 ```
+
+> **Expo Go**: SDK 55 may lag or differ in Expo Go. For full parity, use **development builds** (`expo run:ios` / `expo run:android` or EAS Build).
 
 ## Step 2 — Environment Variables
 
@@ -127,13 +139,76 @@ In Supabase Dashboard → Authentication → Providers:
 
 ## Step 6 — Run the App
 
-```bash
-# Start Expo dev server
-npx expo start
+Masjidy uses native modules (notifications, location, secure store, SQLite, etc.). **Use a development build on device/emulator**, not only the browser.
 
-# Press 'i' for iOS Simulator
-# Press 'a' for Android Emulator
-# Or scan QR code with Expo Go on physical device
+### Android (recommended first)
+
+1. Install [Android Studio](https://developer.android.com/studio) and open **SDK Manager** → install **Android SDK**, **Platform Tools**, and a **system image** for the emulator.
+2. Create an AVD (Virtual Device) in **Device Manager**, or plug in a phone with **USB debugging** enabled.
+3. From the project root:
+
+```bash
+# One-shot: generate android/ (gitignored), compile, install, start Metro
+npm run android
+# Same as: npx expo run:android
+```
+
+If Gradle or SDK paths fail, set `ANDROID_HOME` to your SDK path (e.g. `~/Library/Android/sdk` on macOS) and ensure `platform-tools` is on `PATH`.
+
+Optional: regenerate native project only:
+
+```bash
+npm run prebuild:android
+```
+
+To open the emulator with **Expo Go** only (limited; may not match full native behavior):
+
+```bash
+npm run android:metro
+# Then press a in the terminal, or: npx expo start --android
+```
+
+### iOS (Mac only, later)
+
+```bash
+npm run ios
+# or: npx expo run:ios
+```
+
+### Web
+
+```bash
+npm run web
+```
+
+### Expo Go (physical phone — quick try)
+
+1. Install **Expo Go** from the [App Store](https://apps.apple.com/app/expo-go/id982107779) or [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent).
+2. Ensure **Expo Go’s SDK matches** your project (SDK **55**). If the store build is older, use a **development build** (`npm run android` / `npm run ios`) instead.
+3. On your **computer**, same Wi‑Fi as the phone (or use tunnel — see below):
+
+```bash
+npx expo start
+```
+
+4. **Android**: In the terminal, press **`s`** to switch connection type if needed, then scan the QR code with **Expo Go** (in-app scanner or camera, depending on version).  
+   **iOS**: Open the **Camera** app and tap the notification to open in Expo Go, or scan from inside Expo Go.
+
+5. If the phone cannot reach your PC (corporate Wi‑Fi, etc.), start with a tunnel:
+
+```bash
+npx expo start --tunnel
+```
+
+(Requires an Expo account when using tunnel; follow the CLI prompts.)
+
+**Limitations:** Expo Go only includes a **fixed set** of native modules. Masjidy may hit differences vs a full dev build (e.g. some notification or config behavior). For parity with production, prefer **`npm run android`** / **`npm run ios`**.
+
+### Dev server only
+
+```bash
+npx expo start
+# Then press a / i / w, or scan QR (Expo Go or dev build)
 ```
 
 ## Step 7 — Seed Test Data
@@ -149,7 +224,10 @@ npx tsx scripts/seed-mosques.ts
 
 | Command | What It Does |
 |---|---|
-| `npx expo start` | Start dev server |
+| `npx expo start` | Start dev server (QR for Expo Go, or press a/i/w) |
+| `npx expo start --tunnel` | Dev server with tunnel (Expo Go on another network) |
+| `npm run android` | Dev build: prebuild if needed, run on Android emulator/device |
+| `npm run ios` | Dev build: run on iOS Simulator (Mac) |
 | `npx expo start --clear` | Start with cleared Metro cache |
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Run TypeScript compiler check |
@@ -176,6 +254,10 @@ npx tsx scripts/seed-mosques.ts
 | SQLite crash on Android | Ensure expo-sqlite version matches Expo SDK version |
 | Location permission denied | Test city-search fallback; check Info.plist / AndroidManifest permissions |
 | Apple Sign-In not appearing | Ensure `usesAppleSignIn: true` in app.json and Apple Developer portal is configured |
+| `SDK location not found` / Android build fails | Set `ANDROID_HOME` (e.g. `export ANDROID_HOME=$HOME/Library/Android/sdk`) and add `$ANDROID_HOME/platform-tools` to `PATH` |
+| Emulator not listed | Start an AVD from Android Studio Device Manager, then run `npm run android` again |
+| Expo Go opens but errors / wrong SDK | Update Expo Go from the store, or match project SDK; otherwise use `npm run android` (dev build) |
+| QR scan does not load | Same Wi‑Fi as PC, or run `npx expo start --tunnel`; disable VPN if it blocks LAN |
 
 ---
 
