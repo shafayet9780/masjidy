@@ -1,0 +1,55 @@
+---
+description:
+globs: src/components/**/*.tsx, app/**/*.tsx
+alwaysApply: false
+---
+
+# Component & Screen Rules
+
+## Styling
+- Use NativeWind classes only. Never `StyleSheet.create()` for colors, spacing, or layout.
+- All colors via theme CSS variables: `bg-primary`, `text-secondary`, `border-border`. See @DESIGN_SYSTEM.md for full token list.
+- Spacing uses Tailwind scale mapped to 4px base: `p-4` = 16px, `gap-3` = 12px.
+- Border radius: `rounded-md` (12px) for cards/buttons, `rounded-sm` (6px) for chips, `rounded-full` for avatars.
+- Shadow: one level only — `shadow-card`. Use surface color differences for depth hierarchy.
+
+## Component Structure
+```
+// 1. Imports
+// 2. Interface (props)
+// 3. Component function
+// 4. Sub-components (if small and only used here)
+// 5. Export
+```
+
+## Component Rules
+- Props interface always defined. No inline object types.
+- Destructure props in function signature.
+- Loading state: always use Skeleton component, never a spinner in place of content.
+- Empty state: always render EmptyState component with illustration + message + CTA.
+- Error state: always handle. Show user-friendly message via Toast, never blank screen.
+- Every interactive element: `accessibilityLabel` + `accessibilityRole`. Min tap target 44×44px.
+- Animations via `react-native-reanimated` only. Respect `useReducedMotion()`.
+- Haptics via `expo-haptics` for: check-in success, follow toggle, submission success. Nothing else.
+
+## Screen (Expo Router) Rules
+- Screens in `app/` use default export.
+- Wrap content in `ScreenContainer` (handles SafeArea + scroll + keyboard avoidance).
+- Data fetching in a custom hook, not in the screen component body.
+- Screen loads: show skeleton → fetch → render data OR show error.
+- Pull-to-refresh on any list screen.
+
+## Gluestack UI Usage
+- Use Gluestack primitives for: Button, Input, Select, Switch, Toast, Modal, Actionsheet, Badge, Avatar, Spinner, Divider.
+- Extend with custom components for Masjidy-specific UI (MosqueCard, TrustBadge, PrayerTimeRow, etc).
+- Override Gluestack styles through theme config, not per-instance style props.
+
+## RTL
+- Never use `left`/`right` for layout — use `start`/`end` (NativeWind: `ps-4` not `pl-4`).
+- Test Arabic layout after every new screen.
+- Numbers in prayer times stay LTR even in RTL layouts.
+
+## Images
+- Mosque photos: lazy load on profile screen. Never in list cards or bootstrap payload.
+- Empty photo: use SVG placeholder (mosque silhouette), never a broken image icon.
+- All custom SVGs in `assets/icons/` at 24px grid to match Phosphor style.

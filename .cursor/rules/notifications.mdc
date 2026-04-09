@@ -1,0 +1,87 @@
+---
+description: Push notification queue system using QStash, FCM, APNs. Scheduling, cancellation, retry, deduplication. Reference when working on notification features.
+globs:
+alwaysApply: false
+---
+
+# Notification System Rules
+
+## Architecture (Do NOT Simplify)
+This is a queue-based system. Do not replace it with direct FCM scheduling or cron-based polling.
+
+```
+jamat_time → live
+  → schedule-notifications Edge Function
+    → queries followers
+    → enqueues to QStash (batches of 50)
+      → QStash delivers at scheduled time
+        → deliver-notification Edge Function
+          → FCM (Android) / APNs (iOS)
+```
+
+## QStash Message Format
+```json
+{
+  "user_id": "uuid",
+  "mosque_name": "Masjid Al-Falah",
+  "prayer": "asr",
+  "jamat_time": "16:30",
+  "lead_minutes": 15
+}
+```
+
+## Deduplication
+- Key format: `{mosque_id}:{prayer}:{date}:{user_id}`
+- QStash rejects messages with duplicate dedup keys. This prevents double-scheduling if the Edge Function retries.
+
+## Cancellation (on time update)
+When a new submission goes live for the same mosque/prayer/date:
+1. Cancel all QStash messages with tag `{mosque_id}:{prayer}:{date}` via `DELETE /v2/messages?tag=...`
+2. Delete `notification_jobs` rows with status='queued' for that mosque/prayer/date
+3. Re-enqueue with updated time
+
+## Retry Policy
+- QStash handles retries: 3 attempts with exponential backoff (30s, 120s, 480s)
+- deliver-notification should be idempotent — sending the same notification twice is acceptable (FCM handles device-level dedup)
+- On final failure: update `notification_jobs.status = 'failed'`, log error
+
+## Scheduling Logic
+```
+scheduled_time = jamat_time - user.notification_lead_minutes
+```
+- MVP: global lead time from `users.notification_lead_minutes` (10, 15, or 30)
+- Phase 1.5: per-prayer lead time from `follows.notification_prefs` JSONB, falling back to global
+- Skip enqueue if `scheduled_time` is in the past
+
+## Batch Enqueue
+- Max 50 messages per QStash publish call
+- If a mosque has 200 followers: 4 batches
+- Each batch is a separate QStash API call within the Edge Function
+- Stay within 30s Edge Function timeout
+
+## Token Management
+- Device tokens stored in `users.fcm_token` (Android) and `users.apns_token` (iOS)
+- Updated on every app launch via `register-token` Edge Function
+- If token is null or expired: skip notification, don't crash. Log to `notification_jobs` as failed with reason 'NO_TOKEN'.
+
+## notification_jobs Table
+Track every scheduled notification for observability:
+- `qstash_message_id`: for correlation with QStash dashboard
+- `status`: queued → delivered | failed
+- `attempts`: incremented by deliver-notification on each retry
+- `last_error`: stores failure reason on final failure
+
+## Monitoring Queries
+```sql
+-- Daily delivery rate
+SELECT status, COUNT(*) FROM notification_jobs WHERE date = CURRENT_DATE GROUP BY status;
+
+-- Failed deliveries needing attention
+SELECT * FROM notification_jobs WHERE status = 'failed' AND date >= CURRENT_DATE - 7 ORDER BY created_at DESC;
+```
+
+## Phase 1.5 Upgrade Path
+Per-mosque notification controls (FR-015) only change WHERE the lead time is read from. The queue architecture stays identical:
+- Read `follows.notification_prefs->{prayer}->lead_minutes` instead of `users.notification_lead_minutes`
+- If prayer is disabled in prefs: skip that user for that prayer
+- No architectural change needed — this is why we built the queue from day one

@@ -1,0 +1,54 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Masjidy — Global Project Rules
+
+## Project Identity
+Masjidy is a React Native (Expo) + Supabase app for mosque discovery and jamat time tracking. Solo developer building with AI agent harness. Every decision optimizes for: shippability, offline-first, and sectarian neutrality.
+
+## Architecture (Non-Negotiable)
+- **Frontend**: React Native + Expo SDK 52, Expo Router (file-based routing), TypeScript strict mode
+- **Styling**: NativeWind v4 (Tailwind CSS) + Gluestack UI. All colors via CSS variables from theme system. NEVER hardcode hex colors in components.
+- **Icons**: Phosphor React Native. NEVER use emoji or unicode symbols as icons in UI.
+- **Backend**: Supabase (PostgreSQL + PostGIS + Auth + Realtime + Edge Functions)
+- **Cache**: Upstash Redis (server), Expo SQLite (client offline)
+- **Notifications**: Upstash QStash queue → Edge Function → FCM/APNs. NOT direct FCM scheduling.
+- **State**: Zustand for global state. React Query NOT used — Supabase client handles data fetching.
+
+## Coding Standards
+- TypeScript strict mode. No `any`. No `@ts-ignore` without a comment explaining why.
+- Functional components only. No class components.
+- Named exports for all components and hooks. Default exports only for Expo Router screens.
+- File naming: PascalCase for components (`MosqueCard.tsx`), camelCase for hooks/utils (`useMosques.ts`), kebab-case for directories (`prayer-times/`).
+- Interfaces over types. No enums — use `as const` maps.
+- All user-facing strings via `useTranslation()` from i18next. No hardcoded UI text.
+
+## File Structure Conventions
+- Screens live in `app/` (Expo Router)
+- Components in `src/components/` — grouped by domain (`mosque/`, `prayer/`, `ui/`)
+- Hooks in `src/hooks/` — one hook per file, named `use<Thing>.ts`
+- Pure logic (no React) in `src/lib/` — easily unit-testable
+- Supabase Edge Functions in `supabase/functions/<name>/index.ts`
+- SQL migrations in `supabase/migrations/` — numbered sequentially
+
+## Key Decisions (Don't Revisit)
+- List view before map (map is Phase 1.5)
+- No open comments or ratings on mosques (prevents sectarian disputes)
+- GPS never stored server-side — geofence validated in Edge Function memory then discarded
+- Trust score 0-100 drives all data quality. Badges: green (80+), amber (50-79), grey (10-49), red (<10)
+- Notifications use QStash queue, not cron polling. Dedup key: `{mosque_id}:{prayer}:{date}:{user_id}`
+- Max 5 followed mosques cached offline (MVP). Bootstrap payload max 50KB gzipped.
+
+## Error Handling
+- Every Edge Function returns: `{ error: "CODE", message: "Human-readable" }` with proper HTTP status
+- Client catches errors by `error.code` and maps to i18n strings
+- Never show raw error messages, stack traces, or technical codes to users
+
+## Before Writing Code
+1. Check if similar functionality exists in the codebase — reuse before creating
+2. Check the relevant section of `PROJECT_SPEC.md` for the exact API contract or schema
+3. Check `DESIGN_SYSTEM.md` for component patterns and theme tokens
+4. If a feature has an FR number (e.g., FR-007), check its Acceptance Criteria — implement to that spec, not beyond

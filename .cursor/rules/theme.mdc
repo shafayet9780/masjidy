@@ -1,0 +1,40 @@
+---
+description: Theme system, color tokens, dark mode, NativeWind CSS variables, Gluestack UI config. Reference when working on styling, theming, or appearance.
+globs:
+alwaysApply: false
+---
+
+# Theme System Rules
+
+## Architecture
+- 4 themes × 2 modes = 8 color maps in `src/theme/themes.ts`.
+- Theme selection persisted in AsyncStorage. Color mode supports 'light', 'dark', 'system'.
+- CSS variables applied by ThemeProvider. NativeWind classes resolve to these variables.
+- Gluestack UI tokens mapped to same CSS variables in `src/theme/gluestack.config.ts`.
+
+## Themes
+1. **Emerald Oasis** (default) — deep green `#1B6B4A` + gold `#C9963B`
+2. **Desert Sand** — teal `#0F766E` + sand `#B8860B`
+3. **Midnight Minaret** — navy `#1E3A5F` + gold `#C9963B`
+4. **Ocean Breeze** — blue `#2563EB` + purple `#7C3AED`
+
+## Token Names (use these in NativeWind classes)
+`primary`, `primary-soft`, `accent`, `accent-soft`, `surface`, `surface-elevated`, `surface-muted`, `text-primary`, `text-secondary`, `text-tertiary`, `border`, `success`, `warning`, `danger`, `info`
+
+## Rules
+- NEVER hardcode a hex color in any component. Use `text-primary`, `bg-surface`, etc.
+- Dark mode: use `dark:` NativeWind variants only if the CSS variable approach doesn't cover the case.
+- Semantic tokens for trust badges: `badge-verified` → success, `badge-community` → warning, `badge-unverified` → text-tertiary, `badge-stale` → danger.
+- Contrast: verify 4.5:1 for body text, 3:1 for large text against every theme × mode combination.
+- Theme picker renders a preview swatch for each theme. Active theme has a checkmark overlay.
+
+## Fonts
+- Body/UI: Inter (400, 500, 600, 700)
+- Arabic/Urdu: Noto Sans Arabic (400)
+- Prayer times/digits: JetBrains Mono (400, 500)
+- Load all fonts in root layout via `expo-font`. Show splash until loaded.
+
+## Dark Mode Surfaces
+Light surfaces go from white → light grey (elevated → muted).
+Dark surfaces go from near-black → slightly lighter (elevated → muted).
+The `surface` token is the page background. `surface-elevated` is for cards. `surface-muted` is for dividers and disabled areas.

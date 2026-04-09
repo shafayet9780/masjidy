@@ -1,0 +1,88 @@
+---
+description:
+globs: supabase/functions/**/*.ts
+alwaysApply: false
+---
+
+# Supabase Edge Function Rules
+
+## Runtime
+- Deno runtime (not Node.js). Use Deno-compatible imports.
+- Import Supabase client: `import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'`
+- Environment variables via `Deno.env.get('VAR_NAME')`
+
+## Authentication
+- All user-facing endpoints: validate JWT from Authorization header.
+- Extract user from `supabase.auth.getUser(token)`. Reject 401 if invalid.
+- Internal endpoints (QStash callbacks, Twilio webhooks): verify signature instead of JWT.
+- Use service role client for writes that bypass RLS: `createClient(url, serviceRoleKey)`.
+- NEVER expose service role key in response or logs.
+
+## Request/Response Pattern
+```typescript
+Deno.serve(async (req) => {
+  try {
+    // 1. Auth check
+    // 2. Parse + validate input
+    // 3. Business logic
+    // 4. Database write
+    // 5. Return success
+    return new Response(JSON.stringify({ data }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    // Return structured error — never raw stack trace
+    return new Response(JSON.stringify({
+      error: 'ERROR_CODE',
+      message: 'Human-readable message',
+    }), {
+      status: 400, // or 409, 422, 429 as appropriate
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+});
+```
+
+## Geofence Validation
+- Always server-side via PostGIS: `ST_DWithin(mosque.location, ST_Point(lng, lat)::geography, radius_meters)`
+- GPS coordinates processed in memory only — NEVER written to any table.
+- Check-in radius: 300m. Mosque confirmation radius: 500m.
+
+## Moderation Rules (FR-017)
+Apply in this order on every submission. Stop at first rejection:
+1. Time range (per prayer — see FR-004 ranges)
+2. Velocity (3+ mosques in 60 min)
+3. Duplicate (identical time, same mosque/prayer, 7 days)
+4. Frequency cap (5/day/user — use Redis counter)
+5. Admin lock (flag for review, don't reject)
+
+Log all rejections to `moderation_log` with `rule_triggered`.
+
+## Trust Score Recalculation
+Triggered on: new submission, new check-in, new confirmation.
+- Fetch all competing submissions for same mosque/prayer
+- Recalculate each score: base (by tier) + check-in boost (capped +25) - decay - conflict penalty
+- Highest score wins. Ties broken by most recent. Admin always wins.
+- Update the `trust_score` column on each submission.
+
+## QStash Integration
+- Enqueue: `fetch('https://qstash.upstash.io/v2/publish/...', { headers: { Authorization: 'Bearer ' + QSTASH_TOKEN } })`
+- Cancel by tag: `DELETE https://qstash.upstash.io/v2/messages?tag={tag}`
+- Verify inbound: check `Upstash-Signature` header using signing keys.
+- Batch: max 50 messages per enqueue call to stay within 30s timeout.
+
+## Performance
+- Edge Function cold start budget: < 500ms.
+- Total execution budget: < 5s for any endpoint.
+- Use Redis cache (Upstash) for anything computed and reusable (delay indicators, bootstrap, rate limits).
+- Prefer single SQL query over multiple round trips. Use CTEs for complex logic.
+
+## CORS
+- Set appropriate CORS headers for mobile client:
+```typescript
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+```

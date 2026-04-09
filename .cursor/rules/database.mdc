@@ -1,0 +1,66 @@
+---
+description:
+globs: supabase/migrations/**/*.sql
+alwaysApply: false
+---
+
+# Database & SQL Migration Rules
+
+## General
+- PostgreSQL 15+ with PostGIS extension.
+- All tables use `UUID` primary keys via `gen_random_uuid()`.
+- All tables include `created_at TIMESTAMPTZ DEFAULT now()`.
+- Mutable tables also include `updated_at TIMESTAMPTZ DEFAULT now()`.
+- Foreign keys always include `ON DELETE CASCADE` for child tables.
+- Use `TIMESTAMPTZ` (not `TIMESTAMP`) for all time columns. Store everything in UTC.
+- Prayer times stored as `TIMETZ` (time with timezone), effective dates as `DATE`.
+
+## Naming
+- Tables: plural snake_case (`jamat_times`, `check_ins`, `mosque_confirmations`)
+- Columns: singular snake_case (`mosque_id`, `trust_score`, `geofence_validated`)
+- Indexes: `idx_{table}_{columns}` (e.g., `idx_jamat_times_mosque_prayer`)
+- Enums: singular snake_case (`prayer_type`, `submission_status`, `contributor_tier`)
+- RLS policies: `{table}_{action}_{who}` (e.g., `mosques_select_public`, `follows_crud_own`)
+
+## Enums (defined, do not change)
+```
+prayer_type: fajr, dhuhr, asr, maghrib, isha, jumuah
+submission_status: pending, live, rejected
+contributor_tier: new_user, regular, trusted, mosque_admin
+notification_job_status: queued, delivered, failed
+action_type: submission, checkin, endorsement, confirmation, seasonal_prompt
+```
+
+## Row Level Security
+- RLS enabled on EVERY table. No exceptions.
+- Public read: `USING (true)` — only for `mosques` and `check_ins` aggregates.
+- Own data: `USING (user_id = auth.uid())` or `USING (id = auth.uid())`.
+- System-only tables (`moderation_log`, `notification_jobs`): no user-facing policies. Accessed via service role in Edge Functions only.
+- Mosque admin write: `USING (verified_admin_id = auth.uid())` on `mosques` table.
+- Never rely on application-layer auth checks alone. RLS is the security boundary.
+
+## PostGIS
+- Mosque location stored as: `location GEOGRAPHY(POINT, 4326)`.
+- Proximity query: `ST_DWithin(location, ST_Point($lng, $lat)::geography, $radius_meters)`.
+- Distance: `ST_Distance(location, ST_Point($lng, $lat)::geography)` returns meters.
+- GIST index on location column: `CREATE INDEX idx_mosques_location ON mosques USING GIST (location);`
+- Always pass longitude first in `ST_Point(lng, lat)`.
+
+## Indexes
+- Create indexes for every WHERE clause used in Edge Functions.
+- Composite indexes for multi-column filters (e.g., `mosque_id, prayer, status`).
+- Partial indexes where status filters are common: `WHERE status = 'live'`.
+- Unique indexes for deduplication constraints (check-in, submission, confirmation).
+
+## Migrations
+- One concern per migration file. Don't mix table creation with RLS policies.
+- Numbered sequentially: `001_`, `002_`, etc.
+- Idempotent where possible: `CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`.
+- Never alter production data in a migration — use a separate script.
+- Include `CREATE EXTENSION IF NOT EXISTS postgis;` in the first migration.
+
+## pg_cron Jobs
+- Trust score decay: Monday 02:00 UTC. Applies -5 to unverified jamat_times, floors at 10.
+- Contributor activity window: same job. Demotes inactive tiers after 60 days.
+- Seasonal check: first Monday of each month.
+- All cron jobs documented in migration files with `SELECT cron.schedule(...)`.
