@@ -17,7 +17,7 @@
 I'm building "Masjidy" — an Islamic community app for mosque discovery and jamat time tracking. 
 
 Initialize a new Expo project with the following:
-- Expo SDK 54 with TypeScript
+- Expo SDK 55 with TypeScript
 - Expo Router (file-based routing) 
 - NativeWind v4 with Tailwind CSS
 - The exact folder structure defined in PROJECT_SPEC.md Section 3

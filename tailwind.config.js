@@ -13,13 +13,19 @@ module.exports = {
   safelist: [
     {
       pattern:
-        /(bg|border|text|stroke|fill)-(primary|secondary|tertiary|error|success|warning|info|typography|outline|background|indicator)-(0|50|100|200|300|400|500|600|700|800|900|950|white|gray|black|error|warning|muted|success|info|light|dark|primary)/,
+        /(bg|border|text|stroke|fill)-(primary|secondary|tertiary|error|success|warning|info|typography|outline|background|indicator)-(0|50|100|200|300|400|500|600|700|800|900|950|white|gray|black|error|warning|muted|success|info|light|dark|primary|soft|DEFAULT)/,
+    },
+    {
+      pattern:
+        /(bg|border|text|stroke|fill)-(primary-soft|accent|accent-soft|surface|surface-elevated|surface-muted|text-primary|text-secondary|text-tertiary|border|danger)/,
     },
   ],
   theme: {
     extend: {
       colors: {
         primary: {
+          DEFAULT: 'rgb(var(--color-primary)/<alpha-value>)',
+          soft: 'rgb(var(--color-primary-soft)/<alpha-value>)',
           0: 'rgb(var(--color-primary-0)/<alpha-value>)',
           50: 'rgb(var(--color-primary-50)/<alpha-value>)',
           100: 'rgb(var(--color-primary-100)/<alpha-value>)',
@@ -75,6 +81,7 @@ module.exports = {
           950: 'rgb(var(--color-error-950)/<alpha-value>)',
         },
         success: {
+          DEFAULT: 'rgb(var(--color-success)/<alpha-value>)',
           0: 'rgb(var(--color-success-0)/<alpha-value>)',
           50: 'rgb(var(--color-success-50)/<alpha-value>)',
           100: 'rgb(var(--color-success-100)/<alpha-value>)',
@@ -89,6 +96,7 @@ module.exports = {
           950: 'rgb(var(--color-success-950)/<alpha-value>)',
         },
         warning: {
+          DEFAULT: 'rgb(var(--color-warning)/<alpha-value>)',
           0: 'rgb(var(--color-warning-0)/<alpha-value>)',
           50: 'rgb(var(--color-warning-50)/<alpha-value>)',
           100: 'rgb(var(--color-warning-100)/<alpha-value>)',
@@ -103,6 +111,7 @@ module.exports = {
           950: 'rgb(var(--color-warning-950)/<alpha-value>)',
         },
         info: {
+          DEFAULT: 'rgb(var(--color-info)/<alpha-value>)',
           0: 'rgb(var(--color-info-0)/<alpha-value>)',
           50: 'rgb(var(--color-info-50)/<alpha-value>)',
           100: 'rgb(var(--color-info-100)/<alpha-value>)',
@@ -173,11 +182,25 @@ module.exports = {
           info: 'rgb(var(--color-indicator-info)/<alpha-value>)',
           error: 'rgb(var(--color-indicator-error)/<alpha-value>)',
         },
+        accent: {
+          DEFAULT: 'rgb(var(--color-accent)/<alpha-value>)',
+          soft: 'rgb(var(--color-accent-soft)/<alpha-value>)',
+        },
+        surface: {
+          DEFAULT: 'rgb(var(--color-surface)/<alpha-value>)',
+          elevated: 'rgb(var(--color-surface-elevated)/<alpha-value>)',
+          muted: 'rgb(var(--color-surface-muted)/<alpha-value>)',
+        },
+        'text-primary': 'rgb(var(--color-text-primary)/<alpha-value>)',
+        'text-secondary': 'rgb(var(--color-text-secondary)/<alpha-value>)',
+        'text-tertiary': 'rgb(var(--color-text-tertiary)/<alpha-value>)',
+        border: 'rgb(var(--color-border)/<alpha-value>)',
+        danger: 'rgb(var(--color-danger)/<alpha-value>)',
       },
       fontFamily: {
-        heading: undefined,
-        body: undefined,
-        mono: undefined,
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        arabic: ['NotoSansArabic', 'sans-serif'],
+        mono: ['JetBrainsMono', 'monospace'],
         jakarta: ['var(--font-plus-jakarta-sans)'],
         roboto: ['var(--font-roboto)'],
         code: ['var(--font-source-code-pro)'],
@@ -189,6 +212,12 @@ module.exports = {
       },
       fontSize: {
         '2xs': '10px',
+      },
+      borderRadius: {
+        sm: '6px',
+        md: '12px',
+        lg: '16px',
+        xl: '24px',
       },
       boxShadow: {
         'hard-1': '-2px 2px 8px 0px rgba(38, 38, 38, 0.20)',

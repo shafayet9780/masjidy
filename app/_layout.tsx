@@ -45,8 +45,8 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GluestackUIProvider mode="system">
-        <ThemeProvider>
+      <ThemeProvider>
+        <GluestackUIProvider>
           <StatusBar style="auto" />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
@@ -59,8 +59,8 @@ export default function RootLayout() {
             <Stack.Screen name="settings/notifications" options={{ headerShown: true }} />
             <Stack.Screen name="settings/language" options={{ headerShown: true }} />
           </Stack>
-        </ThemeProvider>
-      </GluestackUIProvider>
+        </GluestackUIProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
