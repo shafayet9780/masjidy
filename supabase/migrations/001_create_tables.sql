@@ -1,2 +1,0 @@
--- Masjidy: create core tables — implement per PROJECT_SPEC §5
--- CREATE EXTENSION IF NOT EXISTS postgis;

@@ -1,1 +1,0 @@
--- Masjidy: indexes — implement per PROJECT_SPEC §5

@@ -1,1 +1,0 @@
--- Masjidy: enums — implement per PROJECT_SPEC §5.1
