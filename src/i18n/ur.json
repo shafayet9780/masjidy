@@ -1,4 +1,8 @@
 {
+  "trustBadge.verified": "تصدیق شدہ",
+  "trustBadge.community": "کمیونٹی",
+  "trustBadge.unverified": "غیر تصدیق شدہ",
+  "trustBadge.stale": "پرانا",
   "placeholder.tab.mosques": "مساجد",
   "placeholder.tab.myMosques": "میری مساجد",
   "placeholder.tab.prayerTimes": "نماز کے اوقات",

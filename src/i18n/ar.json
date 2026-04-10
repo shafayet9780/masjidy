@@ -1,4 +1,8 @@
 {
+  "trustBadge.verified": "موثّق",
+  "trustBadge.community": "مجتمع",
+  "trustBadge.unverified": "غير موثّق",
+  "trustBadge.stale": "قديم",
   "placeholder.tab.mosques": "المساجد",
   "placeholder.tab.myMosques": "مساجدي",
   "placeholder.tab.prayerTimes": "أوقات الصلاة",

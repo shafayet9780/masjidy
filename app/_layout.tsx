@@ -24,13 +24,13 @@ void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    NotoSansArabic_400Regular,
-    JetBrainsMono_400Regular,
-    JetBrainsMono_500Medium,
+    Inter: Inter_400Regular,
+    InterMedium: Inter_500Medium,
+    InterSemiBold: Inter_600SemiBold,
+    InterBold: Inter_700Bold,
+    NotoSansArabic: NotoSansArabic_400Regular,
+    JetBrainsMono: JetBrainsMono_400Regular,
+    JetBrainsMonoMedium: JetBrainsMono_500Medium,
   });
 
   useEffect(() => {

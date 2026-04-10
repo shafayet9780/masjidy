@@ -1,4 +1,8 @@
 {
+  "trustBadge.verified": "Verified",
+  "trustBadge.community": "Community",
+  "trustBadge.unverified": "Unverified",
+  "trustBadge.stale": "Stale",
   "placeholder.tab.mosques": "Mosques",
   "placeholder.tab.myMosques": "My Mosques",
   "placeholder.tab.prayerTimes": "Prayer Times",

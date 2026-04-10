@@ -4,28 +4,28 @@ overview: Fix NativeWind font-family mapping for cross-platform reliability, cre
 todos:
   - id: fix-font-mapping
     content: "Fix NativeWind font mapping: alias font names in useFonts + update tailwind.config.js fontFamily + add shadow-card"
-    status: in_progress
+    status: completed
   - id: icon-test
     content: Create IconShowcase.tsx test component with 5 Phosphor icons in different weights
-    status: pending
+    status: completed
   - id: gluestack-cli
     content: Run npx gluestack-ui add button input to scaffold headless primitives
-    status: pending
+    status: completed
   - id: button-component
     content: Implement Button.tsx with 5 variants (primary/secondary/ghost/danger/accent), sizes, loading state
-    status: pending
+    status: completed
   - id: card-component
     content: Implement Card.tsx with elevated/outlined variants, shadow-card, optional pressable
-    status: pending
+    status: completed
   - id: badge-component
     content: Implement Badge.tsx for trust badges (verified/community/unverified/stale) with icon + color + text
-    status: pending
+    status: completed
   - id: input-component
     content: Implement Input.tsx with label, error state, focus state, RTL-aware padding
-    status: pending
+    status: completed
   - id: skeleton-component
     content: Implement Skeleton.tsx with reanimated shimmer animation, reduced-motion support
-    status: pending
+    status: completed
 isProject: false
 ---
 

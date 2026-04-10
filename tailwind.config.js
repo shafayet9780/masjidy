@@ -199,8 +199,12 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        'sans-medium': ['InterMedium', 'system-ui', 'sans-serif'],
+        'sans-semibold': ['InterSemiBold', 'system-ui', 'sans-serif'],
+        'sans-bold': ['InterBold', 'system-ui', 'sans-serif'],
         arabic: ['NotoSansArabic', 'sans-serif'],
         mono: ['JetBrainsMono', 'monospace'],
+        'mono-medium': ['JetBrainsMonoMedium', 'monospace'],
         jakarta: ['var(--font-plus-jakarta-sans)'],
         roboto: ['var(--font-roboto)'],
         code: ['var(--font-source-code-pro)'],
@@ -220,6 +224,7 @@ module.exports = {
         xl: '24px',
       },
       boxShadow: {
+        card: '0px 2px 8px rgba(0, 0, 0, 0.06)',
         'hard-1': '-2px 2px 8px 0px rgba(38, 38, 38, 0.20)',
         'hard-2': '0px 3px 10px 0px rgba(38, 38, 38, 0.20)',
         'hard-3': '2px 2px 8px 0px rgba(38, 38, 38, 0.20)',
