@@ -65,11 +65,12 @@ CREATE TABLE IF NOT EXISTS public.jamat_times (
 CREATE INDEX IF NOT EXISTS idx_jamat_times_mosque_prayer ON public.jamat_times (mosque_id, prayer, status)
   WHERE status = 'live';
 CREATE INDEX IF NOT EXISTS idx_jamat_times_submitter ON public.jamat_times (submitted_by);
+-- UTC calendar day (timestamptz::date is STABLE; not valid in indexes on PG 15+)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_jamat_times_dedup ON public.jamat_times (
   submitted_by,
   mosque_id,
   prayer,
-  (created_at::date)
+  ((created_at AT TIME ZONE 'UTC')::date)
 );
 
 -- ---------------------------------------------------------------------------
@@ -116,7 +117,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_checkins_dedup ON public.check_ins (
   user_id,
   mosque_id,
   prayer,
-  (arrived_at::date)
+  ((arrived_at AT TIME ZONE 'UTC')::date)
 );
 CREATE INDEX IF NOT EXISTS idx_checkins_mosque_prayer ON public.check_ins (mosque_id, prayer, arrived_at);
 
@@ -130,10 +131,11 @@ CREATE TABLE IF NOT EXISTS public.mosque_confirmations (
   confirmed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Month bucket in UTC (date_trunc on timestamptz is STABLE)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_confirmations_dedup ON public.mosque_confirmations (
   user_id,
   mosque_id,
-  (date_trunc('month', confirmed_at))
+  (date_trunc('month', confirmed_at AT TIME ZONE 'UTC'))
 );
 
 -- ---------------------------------------------------------------------------

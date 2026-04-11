@@ -60,9 +60,7 @@ if (useLocal) {
   }
   const match = url.match(/https?:\/\/([a-z0-9-]+)\.supabase\.co/i);
   if (!match) {
-    console.error(
-      'EXPO_PUBLIC_SUPABASE_URL must look like https://<project-ref>.supabase.co',
-    );
+    console.error('EXPO_PUBLIC_SUPABASE_URL must look like https://<project-ref>.supabase.co');
     process.exit(1);
   }
   const projectRef = match[1];

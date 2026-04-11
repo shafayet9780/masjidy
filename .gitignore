@@ -48,3 +48,6 @@ app-example
 # Generated native projects (expo prebuild / expo run:*). Do NOT ignore ./app/ — that is Expo Router source.
 /ios
 /android
+
+# Supabase
+supabase/.temp/
