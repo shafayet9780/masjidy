@@ -6,4 +6,8 @@ export type RootStackParams = {
   'auth/login': undefined;
   'auth/onboarding': undefined;
   'submit-time/[mosqueId]': { mosqueId: string };
+  'settings/index': undefined;
+  'settings/theme': undefined;
+  'settings/notifications': undefined;
+  'settings/language': undefined;
 };

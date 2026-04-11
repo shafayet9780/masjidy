@@ -36,6 +36,8 @@
       "expo-router",
       "expo-localization",
       "expo-secure-store",
+      "@react-native-google-signin/google-signin",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {

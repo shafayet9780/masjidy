@@ -164,7 +164,7 @@ masjidy/
 │   │   └── [id].tsx              # Mosque profile (dynamic route)
 │   ├── auth/
 │   │   ├── login.tsx             # Login screen
-│   │   └── onboarding.tsx        # First login — name, language, calc method
+│   │   └── onboarding.tsx        # Legacy auth-bound onboarding (migrate to public onboarding route)
 │   ├── submit-time/
 │   │   └── [mosqueId].tsx        # Time submission form
 │   ├── settings/
@@ -172,7 +172,7 @@ masjidy/
 │   │   ├── theme.tsx             # Theme picker
 │   │   ├── notifications.tsx     # Global notification settings
 │   │   └── language.tsx          # Language picker
-│   ├── _layout.tsx               # Root layout (providers, auth guard)
+│   ├── _layout.tsx               # Root layout (providers, onboarding/auth bootstrap)
 │   └── +not-found.tsx            # 404 screen
 │
 ├── src/
@@ -615,35 +615,44 @@ ALTER TABLE notification_jobs ENABLE ROW LEVEL SECURITY;
 
 ### Flow
 
-1. User opens app → check Supabase session in SecureStore
-2. If no session → show auth screen
-3. Auth options: Email OTP, Phone OTP, Google OAuth, Apple Sign-In
-4. On first login → redirect to onboarding: display_name, language, prayer_calc_method
-5. On success → write to `users` table, store session, navigate to home
+1. User opens app → hydrate local preferences from AsyncStorage and check `onboarding_completed`
+2. If onboarding is incomplete → show public onboarding screen (no account required)
+3. Onboarding collects location permission, language, prayer_calc_method, and optional nickname → save locally
+4. After onboarding → show the main app immediately, regardless of auth state
+5. Auth options remain Email OTP, Phone OTP, Google OAuth, Apple Sign-In, but are triggered only when the user chooses to sign in or attempts an authenticated write action
+6. On first successful login → if no `users` row exists, create it from local preferences
+7. On subsequent logins → fetch `users` row and sync server-backed preferences with local state
 
 ### Implementation
 
 ```typescript
-// src/services/supabase.ts
-import { createClient } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
+// app/_layout.tsx
+const isReady = fontsLoaded && preferencesHydrated;
 
-const supabase = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      storage: {
-        getItem: (key) => SecureStore.getItemAsync(key),
-        setItem: (key, value) => SecureStore.setItemAsync(key, value),
-        removeItem: (key) => SecureStore.deleteItemAsync(key),
-      },
-      autoRefreshToken: true,
-      persistSession: true,
-    },
-  }
-);
+if (!onboardingCompleted && !isOnboardingRoute) {
+  router.replace('/onboarding');
+}
+
+// Auth state is still hydrated in the background for logged-in users,
+// but app entry is gated by local onboarding, not by session presence.
 ```
+
+### Local Preferences
+
+```typescript
+interface LocalPreferences {
+  onboardingCompleted: boolean;
+  displayName: string | null;
+  language: 'en' | 'ar' | 'bn' | 'ur';
+  prayerCalcMethod: 'mwl' | 'isna' | 'karachi' | 'umm_al_qura';
+  locationGranted: boolean;
+}
+```
+
+- Storage: AsyncStorage via persisted Zustand store
+- Scope: Available to anonymous and authenticated users
+- Sync behavior: When authenticated, preferences may also be mirrored into the `users` table for portability across devices
+- Security: Preferences are non-sensitive and must not contain tokens or privileged server data
 
 ---
 
@@ -686,7 +695,7 @@ Cache: Upstash Redis, key=bootstrap:{user_id}, TTL=15min.
 
 ```
 GET /functions/v1/nearby-mosques?lat=23.8103&lng=90.4125&radius_km=10&limit=20
-Authorization: Bearer <jwt>
+Authorization: Optional Bearer <jwt>
 
 Response 200:
 {
@@ -806,11 +815,14 @@ Body: (from QStash message)
 ## 8. Feature Specifications — Real MVP
 
 ### FR-001: Authentication
-- **Supabase Auth**: Email OTP, Phone OTP, Google OAuth, Apple Sign-In
-- **Onboarding**: display_name, language (en/ar/bn/ur), prayer_calc_method (mwl/isna/karachi/umm_al_qura)
-- **Session**: Persisted in SecureStore, auto-refresh
-- **Auth guard**: Root layout checks session, redirects to /auth/login if missing
-- **AC**: User can register, log in, and remain authenticated across app restarts
+- **Public-first onboarding**: On first app launch, show onboarding to all users without requiring auth
+- **Onboarding data**: location permission, language (en/ar/bn/ur), prayer_calc_method (mwl/isna/karachi/umm_al_qura), optional nickname
+- **Storage**: Onboarding data lives locally in AsyncStorage and is available offline
+- **Supabase Auth**: Email OTP, Phone OTP, Google OAuth, Apple Sign-In remain available as optional account creation / sign-in methods
+- **Session**: Persisted in SecureStore for authenticated users, auto-refresh enabled
+- **App guard**: Root layout checks `onboardingCompleted`, not session presence
+- **Auth trigger**: Sign-in is required only for user-specific cloud sync and authenticated write actions
+- **AC**: Anonymous user can complete onboarding and use public app features; authenticated user can sign in later and keep their session across restarts
 
 ### FR-002: Mosque List View
 - **Screen**: `app/(tabs)/index.tsx`
@@ -831,6 +843,7 @@ Body: (from QStash message)
 
 ### FR-004: Community Time Submission
 - **Screen**: `app/submit-time/[mosqueId].tsx` (bottom sheet)
+- **Access**: Requires authentication
 - **Validation**: Client-side range check (immediate feedback) + server-side (authoritative)
 - **Ranges**: Fajr 03:00–07:30, Dhuhr 11:30–14:30, Asr 14:00–18:30, Maghrib 17:00–21:00, Isha 18:00–23:59, Jumuah 11:30–14:30
 - **AC**: Valid time accepted; implausible rejected with message; pending labelled
@@ -844,15 +857,18 @@ Body: (from QStash message)
 ### FR-006: Follow System
 - **Data**: `follows` table with RLS
 - **UI**: FollowButton (heart toggle) on mosque profile; My Mosques tab
+- **Access model**: Anonymous users can keep a local follow list; authenticated users sync follows to the backend
 - **Local cache**: Follow state in AsyncStorage for instant UI
 - **Limit**: 50 follows max (server-enforced)
 - **AC**: Follow/unfollow works, persists, shows in My Mosques
 
 ### FR-007: Notifications (Queue-Based)
+- **Access**: Requires authentication
 - See [Section 11: Notification System Architecture](#11-notification-system-architecture)
 - **AC**: Notification at correct lead time; time update reschedules; queue processes within 60s
 
 ### FR-008: Check-In
+- **Access**: Requires authentication
 - **Window**: 30min before to 15min after posted jamat time
 - **Geofence**: 300m via PostGIS ST_DWithin (server-side)
 - **Velocity**: Reject if 2 different mosques within 20min
@@ -860,6 +876,7 @@ Body: (from QStash message)
 - **AC**: Within-range succeeds; duplicates/velocity rejected; count visible
 
 ### FR-008B: Lightweight Confirmation
+- **Access**: Requires authentication
 - **No prayer window**: Available any time
 - **Geofence**: 500m
 - **Cooldown**: 1 per user per mosque per 30 days
@@ -1001,8 +1018,8 @@ When a jamat_time is updated (new submission goes live for same mosque/prayer/da
 | Server | Upstash Redis | Rate limit counters | 1 hour | Auto-expire |
 | Client | Expo SQLite | Followed mosque data | Until refresh | Refreshed on bootstrap call |
 | Client | AsyncStorage | Last-known GPS | Indefinite | Updated on each location fix |
-| Client | AsyncStorage | User preferences (theme, calc method) | Indefinite | Updated on change |
-| Client | AsyncStorage | Follow state (IDs only) | Indefinite | Synced with server on launch |
+| Client | AsyncStorage | User preferences (theme, language, calc method, optional nickname, onboarding flag) | Indefinite | Updated on change |
+| Client | AsyncStorage | Follow state (IDs only) | Indefinite | Synced with server on launch when authenticated; otherwise kept local |
 
 ---
 
