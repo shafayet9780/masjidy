@@ -12,6 +12,7 @@ import { Select, type SelectOption } from '@/components/ui/Select';
 import { consumePendingAuthenticatedAction } from '@/hooks/useRequireAuth';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
+import { isAuthGatedReturnPath } from '@/lib/authGatedReturnPaths';
 
 type AuthStep = 'input' | 'verify';
 type ActiveMethod = 'email' | 'phone' | 'google' | 'apple' | 'verify' | 'resend' | null;
@@ -54,6 +55,15 @@ export default function LoginScreen() {
   const [otpTarget, setOtpTarget] = useState<OtpTarget | null>(null);
   const [resendSeconds, setResendSeconds] = useState(0);
 
+  const resolvedReturnTo = useMemo(() => {
+    if (typeof returnTo !== 'string' || returnTo.length === 0) {
+      return undefined;
+    }
+    return returnTo;
+  }, [returnTo]);
+
+  const isGatedReturn = isAuthGatedReturnPath(resolvedReturnTo);
+
   useEffect(() => {
     if (step !== 'verify' || resendSeconds <= 0) {
       return undefined;
@@ -77,13 +87,13 @@ export default function LoginScreen() {
       pendingAction();
     }
 
-    if (typeof returnTo === 'string' && returnTo.length > 0) {
-      router.replace(returnTo as Href);
+    if (resolvedReturnTo) {
+      router.replace(resolvedReturnTo as Href);
       return;
     }
 
     router.replace('/(tabs)');
-  }, [isAuthenticated, isLoading, returnTo, router]);
+  }, [isAuthenticated, isLoading, resolvedReturnTo, router]);
 
   const countryOptions = useMemo<SelectOption[]>(
     () => [
@@ -101,8 +111,12 @@ export default function LoginScreen() {
   const currentError = errorKey ? t(errorKey) : null;
 
   function handleSkip() {
-    if (typeof returnTo === 'string' && returnTo.length > 0) {
-      router.replace(returnTo as Href);
+    if (isGatedReturn) {
+      router.replace('/(tabs)');
+      return;
+    }
+    if (resolvedReturnTo) {
+      router.replace(resolvedReturnTo as Href);
       return;
     }
 
@@ -423,15 +437,32 @@ export default function LoginScreen() {
         )}
       </Card>
 
-      <Pressable
-        accessibilityLabel={t('auth.login.skip')}
-        accessibilityRole="button"
-        className="mt-4 flex-row items-center justify-center gap-2 py-2"
-        onPress={handleSkip}
-      >
-        <ArrowLeft color={colors.textSecondary} size={16} weight="regular" />
-        <Text className="font-sans-medium text-sm text-text-secondary">{t('auth.login.skip')}</Text>
-      </Pressable>
+      {isGatedReturn ? (
+        <View className="mt-4 gap-2">
+          <Text className="text-center font-sans text-sm text-text-secondary" accessibilityRole="text">
+            {t('auth.login.authRequiredHint')}
+          </Text>
+          <Pressable
+            accessibilityLabel={t('auth.login.backToBrowse')}
+            accessibilityRole="button"
+            className="flex-row items-center justify-center gap-2 py-2"
+            onPress={handleSkip}
+          >
+            <ArrowLeft color={colors.textSecondary} size={16} weight="regular" />
+            <Text className="font-sans-medium text-sm text-text-secondary">{t('auth.login.backToBrowse')}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable
+          accessibilityLabel={t('auth.login.skip')}
+          accessibilityRole="button"
+          className="mt-4 flex-row items-center justify-center gap-2 py-2"
+          onPress={handleSkip}
+        >
+          <ArrowLeft color={colors.textSecondary} size={16} weight="regular" />
+          <Text className="font-sans-medium text-sm text-text-secondary">{t('auth.login.skip')}</Text>
+        </Pressable>
+      )}
     </ScreenContainer>
   );
 }

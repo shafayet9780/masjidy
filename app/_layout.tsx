@@ -102,7 +102,10 @@ export default function RootLayout() {
                   <Stack.Screen name="onboarding" />
                   <Stack.Screen name="auth/login" />
                   <Stack.Screen name="auth/onboarding" />
-                  <Stack.Screen name="submit-time/[mosqueId]" options={{ presentation: 'modal' }} />
+                  <Stack.Screen
+                    name="submit-time/[mosqueId]"
+                    options={{ presentation: 'modal', headerShown: true, title: '' }}
+                  />
                   <Stack.Screen name="settings/index" options={{ headerShown: true }} />
                   <Stack.Screen name="settings/theme" options={{ headerShown: true }} />
                   <Stack.Screen name="settings/notifications" options={{ headerShown: true }} />

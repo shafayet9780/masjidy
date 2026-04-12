@@ -7,7 +7,7 @@ import {
   NEARBY_MOSQUES_MAX_RADIUS_KM,
 } from '@/constants/config';
 import { supabase } from '@/services/supabase';
-import type { MosqueFacilities, NearbyMosque } from '@/types/mosque';
+import type { MosqueFacilities, NearbyMosque, PrayerType, SubmissionStatus } from '@/types/mosque';
 
 export interface ApiErrorShape {
   code: string;
@@ -101,4 +101,68 @@ export async function fetchNearbyMosques(params: {
   }
 
   return rawList.map((row) => mapNearbyRow(row as unknown as Record<string, unknown>));
+}
+
+export interface SubmitTimeInput {
+  mosque_id: string;
+  prayer: PrayerType;
+  /** 24h HH:MM */
+  time: string;
+  effective_date?: string;
+  note?: string | null;
+  /** Device timezone offset in minutes (Date.getTimezoneOffset() inverted) */
+  tz_offset_min?: number;
+}
+
+export interface SubmitTimeResult {
+  id: string;
+  status: SubmissionStatus;
+  trust_score: number;
+}
+
+interface SubmitTimeResponse {
+  id?: string;
+  status?: SubmissionStatus;
+  trust_score?: number;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Submit jamat time via Edge Function (FR-004).
+ */
+export async function submitTime(input: SubmitTimeInput): Promise<SubmitTimeResult> {
+  const { data, error } = await supabase.functions.invoke<SubmitTimeResponse>('submit-time', {
+    body: {
+      mosque_id: input.mosque_id,
+      prayer: input.prayer,
+      time: input.time,
+      effective_date: input.effective_date,
+      note: input.note ?? undefined,
+      tz_offset_min: input.tz_offset_min ?? -new Date().getTimezoneOffset(),
+    },
+  });
+
+  if (error) {
+    throw new ApiError('NETWORK_ERROR', error.message);
+  }
+
+  if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+    throw new ApiError(data.error, typeof data.message === 'string' ? data.message : data.error);
+  }
+
+  if (
+    !data ||
+    typeof data.id !== 'string' ||
+    typeof data.status !== 'string' ||
+    typeof data.trust_score !== 'number'
+  ) {
+    throw new ApiError('INVALID_RESPONSE', 'Invalid submit-time response');
+  }
+
+  return {
+    id: data.id,
+    status: data.status as SubmissionStatus,
+    trust_score: data.trust_score,
+  };
 }

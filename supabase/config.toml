@@ -2,3 +2,13 @@
 
 [api]
 enabled = true
+
+# Internal / webhook functions use shared secrets instead of end-user JWTs.
+[functions.on-submission-insert]
+verify_jwt = false
+
+[functions.update-contributor-tier]
+verify_jwt = false
+
+[functions.decay-trust-scores]
+verify_jwt = false
