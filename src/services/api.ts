@@ -34,7 +34,7 @@ function clampInt(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.floor(value)));
 }
 
-function parseFacilities(raw: unknown): MosqueFacilities {
+export function parseFacilities(raw: unknown): MosqueFacilities {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return {};
   }

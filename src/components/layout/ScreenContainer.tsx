@@ -15,6 +15,7 @@ export interface ScreenContainerProps extends ViewProps {
   contentClassName?: string;
   keyboardShouldPersistTaps?: ScrollViewProps['keyboardShouldPersistTaps'];
   showsVerticalScrollIndicator?: boolean;
+  refreshControl?: ScrollViewProps['refreshControl'];
 }
 
 export function ScreenContainer({
@@ -24,6 +25,7 @@ export function ScreenContainer({
   contentClassName,
   keyboardShouldPersistTaps = 'handled',
   showsVerticalScrollIndicator = false,
+  refreshControl,
   ...rest
 }: ScreenContainerProps) {
   const content = scroll ? (
@@ -32,6 +34,7 @@ export function ScreenContainer({
       contentContainerClassName={`flex-grow px-5 py-6 ${contentClassName ?? ''}`}
       keyboardShouldPersistTaps={keyboardShouldPersistTaps}
       showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+      refreshControl={refreshControl}
       {...rest}
     >
       {children}
