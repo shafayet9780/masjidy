@@ -34,6 +34,18 @@ export interface MosqueFacilities {
   [key: string]: boolean | undefined;
 }
 
+/** Row shape from `nearby_mosques_with_next_prayer` / nearby-mosques Edge Function (PROJECT_SPEC §7.2). */
+export interface NearbyMosque {
+  id: string;
+  name: string;
+  distance_km: number;
+  next_prayer: PrayerType | null;
+  next_jamat_time: string | null;
+  next_trust_score: number | null;
+  facilities: MosqueFacilities;
+  is_tomorrow: boolean;
+}
+
 export interface Mosque {
   id: string;
   name: string;

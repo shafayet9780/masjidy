@@ -43,6 +43,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('placeholder.tab.mosques'),
+          headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <Mosque color={color} size={24} weight={focused ? 'bold' : 'regular'} />
           ),
