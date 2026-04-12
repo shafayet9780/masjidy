@@ -26,7 +26,7 @@ export function PrayerTimeTable({ jamatTimes, onAddTime }: PrayerTimeTableProps)
   return (
     <View className="gap-2">
       <Text
-        className="font-sans-semibold text-xl text-text-primary"
+        className="font-sans-semibold text-[20px] leading-[24px] text-text-primary"
         accessibilityRole="header"
       >
         {t('mosque.profile.schedule')}

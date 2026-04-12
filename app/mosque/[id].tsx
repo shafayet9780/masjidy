@@ -1,16 +1,18 @@
 import { useNavigation } from '@react-navigation/native';
 import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Building, MapPin, Phone, Plus, Warning } from 'phosphor-react-native';
+import { Image } from 'expo-image';
+import { MapPin, Phone, Plus, Warning } from 'phosphor-react-native';
 import React, { useCallback, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Linking, Pressable, RefreshControl, Text, View } from 'react-native';
+import { Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { CheckInButton } from '@/components/mosque/CheckInButton';
 import { ConfirmMosqueButton } from '@/components/mosque/ConfirmMosqueButton';
 import { FacilityChip } from '@/components/mosque/FacilityChip';
 import { FollowButton } from '@/components/mosque/FollowButton';
+import { MosqueProfileHeroPlaceholder } from '@/components/mosque/MosqueProfileHeroPlaceholder';
 import { PrayerTimeTable } from '@/components/mosque/PrayerTimeTable';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -48,6 +50,7 @@ export default function MosqueProfileScreen() {
   const navigation = useNavigation();
   const { mosque, jamatTimes, isLoading, error, refetch } = useMosqueProfile(rawId);
   const [refreshing, setRefreshing] = useState(false);
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -55,6 +58,10 @@ export default function MosqueProfileScreen() {
       headerRight: () => (rawId ? <FollowButton mosqueId={rawId} /> : null),
     });
   }, [navigation, mosque?.name, isLoading, rawId, t]);
+
+  useLayoutEffect(() => {
+    setHeroImageFailed(false);
+  }, [mosque?.id, mosque?.photo_url]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -135,14 +142,20 @@ export default function MosqueProfileScreen() {
     <ScreenContainer
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {mosque.photo_url ? (
+      {mosque.photo_url != null && mosque.photo_url.trim() !== '' && !heroImageFailed ? (
         <View className="aspect-video w-full overflow-hidden rounded-md bg-surface-muted">
           <Image
             accessibilityRole="image"
             accessibilityLabel={mosque.name}
             className="h-full w-full"
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
+            recyclingKey={mosque.photo_url}
+            cachePolicy="memory-disk"
             source={{ uri: mosque.photo_url }}
+            onError={() => {
+              setHeroImageFailed(true);
+            }}
           />
         </View>
       ) : (
@@ -151,12 +164,12 @@ export default function MosqueProfileScreen() {
           accessibilityRole="image"
           accessibilityLabel={t('mosque.profile.noPhoto')}
         >
-          <Building size={64} weight="light" color={colors.textTertiary} />
+          <MosqueProfileHeroPlaceholder />
         </View>
       )}
 
       <Text
-        className="mt-6 font-sans-bold text-2xl text-text-primary"
+        className="mt-6 font-sans-bold text-2xl leading-[28.8px] text-text-primary"
         accessibilityRole="header"
       >
         {mosque.name}
@@ -215,14 +228,22 @@ export default function MosqueProfileScreen() {
 
       {facilityKeys.length > 0 ? (
         <View className="mt-8 gap-3">
-          <Text className="font-sans-semibold text-xl text-text-primary" accessibilityRole="header">
+          <Text
+            className="font-sans-semibold text-[20px] leading-[24px] text-text-primary"
+            accessibilityRole="header"
+          >
             {t('mosque.profile.facilities')}
           </Text>
-          <View className="-mx-1 flex-row flex-wrap gap-2 px-1">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="-mx-1"
+            contentContainerClassName="flex-row items-center gap-2 px-1"
+          >
             {facilityKeys.map((key) => (
               <FacilityChip key={key} facility={key} />
             ))}
-          </View>
+          </ScrollView>
         </View>
       ) : null}
 

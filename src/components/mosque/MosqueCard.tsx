@@ -55,77 +55,75 @@ export function MosqueCard({ mosque, onPress }: MosqueCardProps) {
   ].filter(Boolean);
 
   return (
-    <Card
-      pressable
-      variant="elevated"
-      className="mb-0 p-4"
-      onPress={() => onPress(mosque.id)}
-      accessibilityRole="button"
-      accessibilityLabel={a11yParts.join(', ')}
-    >
+    <Card variant="elevated" className="mb-0 p-4">
       <View className="flex-row items-start gap-3">
-        <Mosque size={24} weight="duotone" color={colors.primary} />
-        <View className="min-w-0 flex-1">
-          <View className="flex-row items-start justify-between gap-2">
+        <Pressable
+          className="min-w-0 flex-1 flex-row items-start gap-3"
+          onPress={() => onPress(mosque.id)}
+          accessibilityRole="button"
+          accessibilityLabel={a11yParts.join(', ')}
+        >
+          <Mosque size={24} weight="duotone" color={colors.primary} />
+          <View className="min-w-0 flex-1">
             <Text
-              className="flex-1 font-sans-semibold text-base text-text-primary"
+              className="font-sans-semibold text-base text-text-primary"
               numberOfLines={2}
               accessibilityRole="text"
             >
               {mosque.name}
             </Text>
-            <FollowButton mosqueId={mosque.id} />
-          </View>
-          <View className="mt-1 flex-row items-center gap-1">
-            <MapPin size={18} weight="regular" color={colors.textSecondary} />
-            <Text className="font-sans text-sm text-text-secondary" accessibilityRole="text">
-              {t('mosques.card.distance', { distance: distanceLabel })}
-            </Text>
-          </View>
-          {mosque.next_prayer != null && mosque.next_jamat_time != null ? (
-            <View className="mt-3 rounded-sm bg-primary-soft px-3 py-2">
-              <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
-                <Text className="font-sans text-sm text-text-primary">{prayerLabel}</Text>
-                <Text className="font-sans text-sm text-text-tertiary">·</Text>
-                <Text className="font-mono text-sm text-text-primary">{timeStr}</Text>
-                {mosque.next_trust_score != null ? (
-                  <>
-                    <Text className="font-sans text-sm text-text-tertiary">·</Text>
-                    <TrustBadge score={mosque.next_trust_score} />
-                  </>
-                ) : null}
-                {mosque.is_tomorrow ? (
-                  <View className="ms-1 rounded-sm bg-accent-soft px-2 py-0.5">
-                    <Text className="font-sans text-xs text-text-secondary">
-                      {t('mosques.list.tomorrow')}
-                    </Text>
+            <View className="mt-1 flex-row items-center gap-1">
+              <MapPin size={18} weight="regular" color={colors.textSecondary} />
+              <Text className="font-sans text-sm text-text-secondary" accessibilityRole="text">
+                {t('mosques.card.distance', { distance: distanceLabel })}
+              </Text>
+            </View>
+            {mosque.next_prayer != null && mosque.next_jamat_time != null ? (
+              <View className="mt-3 rounded-sm bg-primary-soft px-3 py-2">
+                <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                  <Text className="font-sans text-sm text-text-primary">{prayerLabel}</Text>
+                  <Text className="font-sans text-sm text-text-tertiary">·</Text>
+                  <Text className="font-mono text-sm text-text-primary">{timeStr}</Text>
+                  {mosque.next_trust_score != null ? (
+                    <>
+                      <Text className="font-sans text-sm text-text-tertiary">·</Text>
+                      <TrustBadge score={mosque.next_trust_score} />
+                    </>
+                  ) : null}
+                  {mosque.is_tomorrow ? (
+                    <View className="ms-1 rounded-sm bg-accent-soft px-2 py-0.5">
+                      <Text className="font-sans text-xs text-text-secondary">
+                        {t('mosques.list.tomorrow')}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
+            {visibleFacilities.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mt-3 -mx-1"
+                contentContainerClassName="flex-row items-center gap-2 px-1"
+              >
+                {visibleFacilities.map((key) => (
+                  <FacilityChip key={key} facility={key} />
+                ))}
+                {overflow > 0 ? (
+                  <View
+                    accessibilityRole="text"
+                    accessibilityLabel={t('mosques.card.moreFacilities', { count: overflow })}
+                    className="rounded-sm bg-surface-muted px-2 py-1"
+                  >
+                    <Text className="font-sans text-xs text-text-secondary">+{overflow}</Text>
                   </View>
                 ) : null}
-              </View>
-            </View>
-          ) : null}
-          {visibleFacilities.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              className="mt-3 -mx-1"
-              contentContainerClassName="flex-row items-center gap-2 px-1"
-            >
-              {visibleFacilities.map((key) => (
-                <FacilityChip key={key} facility={key} />
-              ))}
-              {overflow > 0 ? (
-                <Pressable
-                  accessibilityRole="text"
-                  accessibilityLabel={t('mosques.card.moreFacilities', { count: overflow })}
-                  className="rounded-sm bg-surface-muted px-2 py-1"
-                >
-                  <Text className="font-sans text-xs text-text-secondary">+{overflow}</Text>
-                </Pressable>
-              ) : null}
-            </ScrollView>
-          ) : null}
-        </View>
+              </ScrollView>
+            ) : null}
+          </View>
+        </Pressable>
+        <FollowButton mosqueId={mosque.id} />
       </View>
     </Card>
   );
