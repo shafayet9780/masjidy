@@ -9,6 +9,9 @@ export const LOCATION_STORAGE_KEY = 'masjidy-last-location';
 
 export const LOCAL_FOLLOW_IDS_KEY = 'masjidy-local-follow-ids';
 
+/** Server + client cap (FR-006). */
+export const MAX_FOLLOWS = 50;
+
 export const CONFIG_PLACEHOLDER = {
   bootstrapMaxMosques: 5,
 } as const;

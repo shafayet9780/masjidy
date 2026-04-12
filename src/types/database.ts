@@ -616,6 +616,24 @@ export type Database = {
         | { Args: { table_name: string }; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      followed_mosques_with_next_prayer: {
+        Args: {
+          p_current_local_time?: string
+          p_lat: number
+          p_lng: number
+          p_mosque_ids: string[]
+        }
+        Returns: {
+          distance_km: number
+          facilities: Json
+          id: string
+          is_tomorrow: boolean
+          name: string
+          next_jamat_time: string
+          next_prayer: Database["public"]["Enums"]["prayer_type"]
+          next_trust_score: number
+        }[]
+      }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -716,6 +734,25 @@ export type Database = {
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       gettransactionid: { Args: never; Returns: unknown }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      nearby_mosques_with_next_prayer: {
+        Args: {
+          p_current_local_time?: string
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_radius_km?: number
+        }
+        Returns: {
+          distance_km: number
+          facilities: Json
+          id: string
+          is_tomorrow: boolean
+          name: string
+          next_jamat_time: string
+          next_prayer: Database["public"]["Enums"]["prayer_type"]
+          next_trust_score: number
+        }[]
+      }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }

@@ -52,7 +52,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="my-mosques"
         options={{
-          title: t('placeholder.tab.myMosques'),
+          title: t('myMosques.title'),
           tabBarIcon: ({ color, focused }) => (
             <Heart color={color} size={24} weight={focused ? 'fill' : 'regular'} />
           ),

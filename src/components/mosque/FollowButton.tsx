@@ -1,11 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { Heart } from 'phosphor-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable } from 'react-native';
+import { AccessibilityInfo, Pressable } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { LOCAL_FOLLOW_IDS_KEY } from '@/constants/config';
+import { MAX_FOLLOWS } from '@/constants/config';
+import { useFollows } from '@/hooks/useFollows';
 import { useTheme } from '@/hooks/useTheme';
 
 export interface FollowButtonProps {
@@ -13,56 +19,60 @@ export interface FollowButtonProps {
   size?: number;
 }
 
-async function readFollowIds(): Promise<Set<string>> {
-  try {
-    const raw = await AsyncStorage.getItem(LOCAL_FOLLOW_IDS_KEY);
-    if (!raw) return new Set();
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return new Set();
-    return new Set(parsed.filter((x): x is string => typeof x === 'string'));
-  } catch {
-    return new Set();
-  }
-}
-
-async function writeFollowIds(ids: Set<string>): Promise<void> {
-  try {
-    await AsyncStorage.setItem(LOCAL_FOLLOW_IDS_KEY, JSON.stringify([...ids]));
-  } catch {
-    // ignore
-  }
-}
+const BOUNCE_MS = 100;
 
 export function FollowButton({ mosqueId, size = 22 }: FollowButtonProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [following, setFollowing] = useState(false);
+  const { isFollowing, followMosque, unfollowMosque, followedIds } = useFollows();
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const scale = useSharedValue(1);
+
+  const following = isFollowing(mosqueId);
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      const ids = await readFollowIds();
+    void AccessibilityInfo.isReduceMotionEnabled().then((v) => {
       if (!cancelled) {
-        setFollowing(ids.has(mosqueId));
+        setReduceMotion(v);
       }
-    })();
+    });
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => {
       cancelled = true;
+      sub.remove();
     };
-  }, [mosqueId]);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const playBounce = useCallback(() => {
+    if (reduceMotion) {
+      return;
+    }
+    scale.value = withSequence(
+      withTiming(1.3, { duration: BOUNCE_MS }),
+      withTiming(1, { duration: BOUNCE_MS }),
+    );
+  }, [reduceMotion, scale]);
 
   const toggle = useCallback(async () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const ids = await readFollowIds();
-    if (ids.has(mosqueId)) {
-      ids.delete(mosqueId);
-      setFollowing(false);
-    } else {
-      ids.add(mosqueId);
-      setFollowing(true);
+    if (following) {
+      playBounce();
+      await unfollowMosque(mosqueId);
+      return;
     }
-    await writeFollowIds(ids);
-  }, [mosqueId]);
+
+    if (followedIds.length >= MAX_FOLLOWS) {
+      return;
+    }
+
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    playBounce();
+    await followMosque(mosqueId);
+  }, [followMosque, followedIds.length, following, mosqueId, playBounce, unfollowMosque]);
 
   return (
     <Pressable
@@ -71,13 +81,17 @@ export function FollowButton({ mosqueId, size = 22 }: FollowButtonProps) {
       accessibilityState={{ selected: following }}
       hitSlop={12}
       className="min-h-[44px] min-w-[44px] items-center justify-center"
-      onPress={toggle}
+      onPress={() => {
+        void toggle();
+      }}
     >
-      <Heart
-        size={size}
-        weight={following ? 'fill' : 'regular'}
-        color={following ? colors.primary : colors.textSecondary}
-      />
+      <Animated.View style={animatedStyle}>
+        <Heart
+          size={size}
+          weight={following ? 'fill' : 'regular'}
+          color={following ? colors.primary : colors.textSecondary}
+        />
+      </Animated.View>
     </Pressable>
   );
 }
