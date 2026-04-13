@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { FACILITY_KEYS } from '@/constants/facilities';
 import { useMosqueProfile } from '@/hooks/useMosqueProfile';
 import { useTheme } from '@/hooks/useTheme';
+import { formatLocalYmd, getActiveCheckInPrayer } from '@/lib/checkInWindow';
 import type { Mosque, PrayerType } from '@/types/mosque';
 
 function orderedFacilityKeys(facilities: Mosque['facilities']): string[] {
@@ -138,6 +139,8 @@ export default function MosqueProfileScreen() {
 
   const facilityKeys = orderedFacilityKeys(mosque.facilities);
 
+  const activeCheckIn = getActiveCheckInPrayer(jamatTimes, formatLocalYmd(new Date()), Date.now());
+
   return (
     <ScreenContainer
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -216,12 +219,6 @@ export default function MosqueProfileScreen() {
         </View>
       ) : null}
 
-      {mosque.confirmation_count > 0 ? (
-        <Text className="mt-3 font-sans text-sm text-text-tertiary" accessibilityRole="text">
-          {t('mosque.profile.confirmed', { count: mosque.confirmation_count })}
-        </Text>
-      ) : null}
-
       <View className="mt-8">
         <PrayerTimeTable jamatTimes={jamatTimes} onAddTime={goSubmitTime} />
       </View>
@@ -248,8 +245,14 @@ export default function MosqueProfileScreen() {
       ) : null}
 
       <View className="mt-10 gap-3">
-        <CheckInButton mosqueId={mosque.id} />
-        <ConfirmMosqueButton mosqueId={mosque.id} />
+        <CheckInButton mosqueId={mosque.id} activePrayer={activeCheckIn?.prayer ?? null} />
+        <ConfirmMosqueButton
+          mosqueId={mosque.id}
+          initialConfirmationCount={mosque.confirmation_count}
+          onConfirmed={() => {
+            void refetch();
+          }}
+        />
       </View>
 
       <View className="mt-6 pb-4">

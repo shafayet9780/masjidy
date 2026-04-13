@@ -56,6 +56,7 @@ export interface UseNotificationsResult {
 }
 
 export function useNotifications(): UseNotificationsResult {
+  const isWeb = Platform.OS === 'web';
   const router = useRouter();
   const session = useAuthStore((state) => state.session);
   const authHydrated = useAuthStore((state) => state.hydrated);
@@ -85,6 +86,11 @@ export function useNotifications(): UseNotificationsResult {
   }, []);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (isWeb) {
+      setPermissionStatus('denied');
+      return false;
+    }
+
     await ensureAndroidChannel();
 
     const existing = await Notifications.getPermissionsAsync();
@@ -98,10 +104,10 @@ export function useNotifications(): UseNotificationsResult {
     const nextStatus = mapPermissionStatus(requested);
     setPermissionStatus(nextStatus);
     return nextStatus === 'granted';
-  }, [ensureAndroidChannel]);
+  }, [ensureAndroidChannel, isWeb]);
 
   const registerCurrentPushToken = useCallback(async (): Promise<string | null> => {
-    if (!Device.isDevice) {
+    if (isWeb || !Device.isDevice) {
       return null;
     }
 
@@ -115,9 +121,13 @@ export function useNotifications(): UseNotificationsResult {
     await registerPushToken(token.data, platform);
     setExpoPushToken(token.data);
     return token.data;
-  }, []);
+  }, [isWeb]);
 
   const initialize = useCallback(async () => {
+    if (isWeb) {
+      return;
+    }
+
     if (
       initializeInFlight.current ||
       !onboardingCompleted ||
@@ -166,9 +176,14 @@ export function useNotifications(): UseNotificationsResult {
     onboardingCompleted,
     registerCurrentPushToken,
     requestPermission,
+    isWeb,
   ]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowBanner: true,
@@ -177,9 +192,13 @@ export function useNotifications(): UseNotificationsResult {
         shouldSetBadge: false,
       }),
     });
-  }, []);
+  }, [isWeb]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
       setLatestNotification(notification);
     });
@@ -187,9 +206,13 @@ export function useNotifications(): UseNotificationsResult {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [isWeb]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
       if (data && typeof data.mosque_id === 'string' && data.mosque_id.length > 0) {
@@ -200,18 +223,26 @@ export function useNotifications(): UseNotificationsResult {
     return () => {
       subscription.remove();
     };
-  }, [router]);
+  }, [isWeb, router]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     void Notifications.getLastNotificationResponseAsync().then((response) => {
       const data = response?.notification.request.content.data;
       if (data && typeof data.mosque_id === 'string' && data.mosque_id.length > 0) {
         router.push(`/mosque/${data.mosque_id}`);
       }
     });
-  }, [router]);
+  }, [isWeb, router]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     const subscription = Notifications.addPushTokenListener(async (token) => {
       if (!isAuthenticated) {
         return;
@@ -225,13 +256,21 @@ export function useNotifications(): UseNotificationsResult {
     return () => {
       subscription.remove();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isWeb]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     void initialize();
-  }, [initialize]);
+  }, [initialize, isWeb]);
 
   useEffect(() => {
+    if (isWeb) {
+      return;
+    }
+
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
         void initialize();
@@ -241,13 +280,18 @@ export function useNotifications(): UseNotificationsResult {
     return () => {
       subscription.remove();
     };
-  }, [initialize]);
+  }, [initialize, isWeb]);
 
   useEffect(() => {
+    if (isWeb) {
+      setPermissionStatus('denied');
+      return;
+    }
+
     void Notifications.getPermissionsAsync().then((result) => {
       setPermissionStatus(mapPermissionStatus(result));
     });
-  }, []);
+  }, [isWeb]);
 
   return {
     permissionStatus,

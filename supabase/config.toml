@@ -21,3 +21,15 @@ verify_jwt = false
 
 [functions.deliver-notification]
 verify_jwt = false
+
+[functions.check-in]
+verify_jwt = true
+
+[functions.confirm-mosque]
+verify_jwt = true
+
+[functions.on-checkin-insert]
+verify_jwt = false
+
+[functions.on-confirmation-insert]
+verify_jwt = false

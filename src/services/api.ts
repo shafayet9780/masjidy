@@ -166,3 +166,108 @@ export async function submitTime(input: SubmitTimeInput): Promise<SubmitTimeResu
     trust_score: data.trust_score,
   };
 }
+
+export interface CheckInInput {
+  mosque_id: string;
+  prayer: PrayerType;
+  latitude: number;
+  longitude: number;
+  started_at?: string;
+  /** Device calendar date YYYY-MM-DD for jamat window (must match server logic). */
+  local_date?: string;
+}
+
+export interface CheckInResult {
+  id: string;
+  live_count: number;
+}
+
+interface CheckInResponse {
+  id?: string;
+  live_count?: number;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Check in at a mosque (FR-008) — geofence and window validated server-side.
+ */
+export async function checkIn(input: CheckInInput): Promise<CheckInResult> {
+  const { data, error } = await supabase.functions.invoke<CheckInResponse>('check-in', {
+    body: {
+      mosque_id: input.mosque_id,
+      prayer: input.prayer,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      started_at: input.started_at,
+      local_date: input.local_date,
+    },
+  });
+
+  if (error) {
+    throw new ApiError('NETWORK_ERROR', error.message);
+  }
+
+  if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+    throw new ApiError(data.error, typeof data.message === 'string' ? data.message : data.error);
+  }
+
+  if (
+    !data ||
+    typeof data.id !== 'string' ||
+    typeof data.live_count !== 'number' ||
+    !Number.isFinite(data.live_count)
+  ) {
+    throw new ApiError('INVALID_RESPONSE', 'Invalid check-in response');
+  }
+
+  return {
+    id: data.id,
+    live_count: data.live_count,
+  };
+}
+
+export interface ConfirmMosqueInput {
+  mosque_id: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface ConfirmMosqueResult {
+  confirmation_count: number;
+}
+
+interface ConfirmMosqueResponse {
+  confirmation_count?: number;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Confirm presence at a mosque (FR-008B).
+ */
+export async function confirmMosque(input: ConfirmMosqueInput): Promise<ConfirmMosqueResult> {
+  const { data, error } = await supabase.functions.invoke<ConfirmMosqueResponse>('confirm-mosque', {
+    body: {
+      mosque_id: input.mosque_id,
+      latitude: input.latitude,
+      longitude: input.longitude,
+    },
+  });
+
+  if (error) {
+    throw new ApiError('NETWORK_ERROR', error.message);
+  }
+
+  if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+    throw new ApiError(data.error, typeof data.message === 'string' ? data.message : data.error);
+  }
+
+  if (!data || typeof data.confirmation_count !== 'number' || !Number.isFinite(data.confirmation_count)) {
+    throw new ApiError('INVALID_RESPONSE', 'Invalid confirm-mosque response');
+  }
+
+  return {
+    confirmation_count: data.confirmation_count,
+  };
+}

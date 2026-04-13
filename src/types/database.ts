@@ -756,6 +756,19 @@ export type Database = {
           next_trust_score: number
         }[]
       }
+      increment_mosque_confirmation_count: {
+        Args: { p_mosque_id: string }
+        Returns: number
+      }
+      mosque_within_meters: {
+        Args: {
+          p_lat: number
+          p_lng: number
+          p_meters: number
+          p_mosque_id: string
+        }
+        Returns: boolean
+      }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
