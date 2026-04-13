@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { useCallback } from 'react';
 
 import { supabase } from '@/services/supabase';
+import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import type { Database } from '@/types/database';
@@ -57,6 +58,7 @@ function toUser(row: UserRow): User {
     language: row.language ?? 'en',
     prayer_calc_method: (row.prayer_calc_method ?? prayerCalcMethod.mwl) as PrayerCalcMethod,
     notification_lead_minutes: (row.notification_lead_minutes ?? 15) as NotificationLeadMinutes,
+    expo_push_token: row.expo_push_token ?? null,
     fcm_token: row.fcm_token,
     apns_token: row.apns_token,
     created_at: row.created_at ?? timestamp,
@@ -134,10 +136,12 @@ function resolveDisplayName(nextSession: Session): string {
 
 function syncProfileToLocalPreferences(profile: User) {
   const preferencesState = usePreferencesStore.getState();
+  const appState = useAppStore.getState();
 
   preferencesState.setDisplayName(profile.display_name);
   preferencesState.setLanguage(profile.language as SupportedLanguage);
   preferencesState.setPrayerCalcMethod(profile.prayer_calc_method);
+  appState.setNotificationLeadMinutes(profile.notification_lead_minutes);
 }
 
 export function useAuth() {
@@ -171,6 +175,7 @@ export function useAuth() {
   const createProfile = useCallback(
     async (nextSession: Session): Promise<User> => {
       const preferencesState = usePreferencesStore.getState();
+      const appState = useAppStore.getState();
 
       const { data, error } = await supabase
         .from('users')
@@ -179,6 +184,7 @@ export function useAuth() {
           display_name: resolveDisplayName(nextSession),
           language: preferencesState.language,
           prayer_calc_method: preferencesState.prayerCalcMethod,
+          notification_lead_minutes: appState.notificationLeadMinutes,
         })
         .select('*')
         .single();

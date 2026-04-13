@@ -371,6 +371,7 @@ export type Database = {
           apns_token: string | null
           created_at: string | null
           display_name: string
+          expo_push_token: string | null
           fcm_token: string | null
           id: string
           language: string | null
@@ -384,6 +385,7 @@ export type Database = {
           apns_token?: string | null
           created_at?: string | null
           display_name: string
+          expo_push_token?: string | null
           fcm_token?: string | null
           id: string
           language?: string | null
@@ -397,6 +399,7 @@ export type Database = {
           apns_token?: string | null
           created_at?: string | null
           display_name?: string
+          expo_push_token?: string | null
           fcm_token?: string | null
           id?: string
           language?: string | null

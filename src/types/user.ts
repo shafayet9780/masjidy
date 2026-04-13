@@ -57,6 +57,7 @@ export interface User {
   language: string;
   prayer_calc_method: PrayerCalcMethod;
   notification_lead_minutes: NotificationLeadMinutes;
+  expo_push_token: string | null;
   fcm_token: string | null;
   apns_token: string | null;
   created_at: string;

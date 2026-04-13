@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MAX_FOLLOWS } from '@/constants/config';
 import type { Coordinates } from '@/hooks/useLocation';
+import { cancelLocalForMosque, scheduleLocalForMosque } from '@/services/notifications';
 import { parseFacilities } from '@/services/api';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
@@ -208,6 +209,9 @@ export function useFollows(options?: UseFollowsOptions): UseFollowsResult {
       addId(id);
 
       if (!userId) {
+        await scheduleLocalForMosque(id).catch(() => {
+          // Non-fatal: local notifications are best-effort for anonymous users.
+        });
         return;
       }
 
@@ -239,6 +243,9 @@ export function useFollows(options?: UseFollowsOptions): UseFollowsResult {
       removeId(id);
 
       if (!userId) {
+        await cancelLocalForMosque(id).catch(() => {
+          // Non-fatal: local notifications are best-effort for anonymous users.
+        });
         return;
       }
 

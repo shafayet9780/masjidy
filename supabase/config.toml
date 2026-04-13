@@ -12,3 +12,12 @@ verify_jwt = false
 
 [functions.decay-trust-scores]
 verify_jwt = false
+
+[functions.register-token]
+verify_jwt = true
+
+[functions.schedule-notifications]
+verify_jwt = false
+
+[functions.deliver-notification]
+verify_jwt = false

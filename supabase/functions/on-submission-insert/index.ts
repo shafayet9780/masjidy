@@ -299,6 +299,17 @@ Deno.serve(async (req) => {
     }).catch(() => {
       /* non-fatal */
     });
+
+    await fetch(`${supabaseUrl}/functions/v1/schedule-notifications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-secret': internalSecret,
+      },
+      body: JSON.stringify({ record: row }),
+    }).catch(() => {
+      /* non-fatal */
+    });
   }
 
   return jsonResponse({ ok: true, status: finalRow?.status ?? 'unknown' });

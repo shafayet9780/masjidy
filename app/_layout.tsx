@@ -20,7 +20,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GluestackUIProvider } from '@/components/gluestack-ui/gluestack-ui-provider';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
 import { i18n } from '@/i18n';
+import { useAppStore } from '@/store/appStore';
+import { useFollowStore } from '@/store/followStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import type { SupportedLanguage } from '@/store/preferencesStore';
 import { ThemeProvider } from '@/theme/ThemeProvider';
@@ -42,7 +45,10 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const { initAuth } = useAuth();
+  useNotifications();
   const hydratePreferences = usePreferencesStore((state) => state.hydrate);
+  const hydrateAppStore = useAppStore((state) => state.hydrate);
+  const hydrateFollowStore = useFollowStore((state) => state.hydrate);
   const preferencesHydrated = usePreferencesStore((state) => state.hydrated);
   const onboardingCompleted = usePreferencesStore((state) => state.onboardingCompleted);
   const isAppReady = fontsLoaded && preferencesHydrated;
@@ -53,6 +59,11 @@ export default function RootLayout() {
   useEffect(() => {
     void hydratePreferences();
   }, [hydratePreferences]);
+
+  useEffect(() => {
+    void hydrateAppStore();
+    void hydrateFollowStore();
+  }, [hydrateAppStore, hydrateFollowStore]);
 
   useEffect(() => {
     if (!preferencesHydrated) {
